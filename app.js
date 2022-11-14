@@ -1,13 +1,14 @@
+require('dotenv/config')
+
 const express = require('express');
 const mysql = require('mysql2');
-
-const mysqlpw = require('./pw').pw;
+var random = require('random-name')
 
 // Create connection
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
-    password: mysqlpw,
+    password: process.env.PASSWORD,
     database: 'employeedb'
 });
 
@@ -61,9 +62,36 @@ app.get('/createemployee', (req, res) => {
     })
 })
 
+app.get('/createrandomemployee', (req, res) => {
+    function getRandomInt(max){
+        return Math.floor(Math.random() * max)
+    }
+
+    let f_name = random.first();
+    let l_name = random.last();
+    if(l_name.includes("W"))
+        console.log("has a W");
+    let yyyy = 1950 + getRandomInt(52);
+    let mm = 1 + getRandomInt(12);
+    let dd = 1 + getRandomInt(28);
+    let email = `${f_name.toLowerCase()}.${l_name.toLowerCase()}@gmail.com`
+    let skill_id = "a0e1827d-61fd-11ed-b1bd-803f5d06682c"
+    let is_active = getRandomInt(2);
+
+    let dob = `${yyyy}-${mm}-${dd}`
+
+    let sql = `INSERT INTO employees VALUES(UUID(), '${f_name}', '${l_name}', '${dob}', '${email}', '${skill_id}', ${is_active})`
+    
+    console.log(f_name);
+    console.log(l_name);
+    
+    console.log(sql);
+    res.json(["test"])
+})
+
 app.get('/deleteallemployees', (req, res) => {
     let sql = `DELETE FROM employees`
-    console.log("All employees removed");
+    console.log(sql);
 
     db.query(sql, (err, result) => {
         if(err){
@@ -71,6 +99,7 @@ app.get('/deleteallemployees', (req, res) => {
         }
         console.log("All employees removed")
     })
+    console.log("Should have removed all employees");
 })
 
 app.listen('4000', () => {
