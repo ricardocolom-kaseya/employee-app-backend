@@ -60,33 +60,15 @@ app.get('/createemployee', (req, res) => {
             throw err
         }
     })
-})
 
-app.get('/createrandomemployee', (req, res) => {
-    function getRandomInt(max){
-        return Math.floor(Math.random() * max)
-    }
-
-    let f_name = random.first();
-    let l_name = random.last();
-    if(l_name.includes("W"))
-        console.log("has a W");
-    let yyyy = 1950 + getRandomInt(52);
-    let mm = 1 + getRandomInt(12);
-    let dd = 1 + getRandomInt(28);
-    let email = `${f_name.toLowerCase()}.${l_name.toLowerCase()}@gmail.com`
-    let skill_id = "a0e1827d-61fd-11ed-b1bd-803f5d06682c"
-    let is_active = getRandomInt(2);
-
-    let dob = `${yyyy}-${mm}-${dd}`
-
-    let sql = `INSERT INTO employees VALUES(UUID(), '${f_name}', '${l_name}', '${dob}', '${email}', '${skill_id}', ${is_active})`
-    
-    console.log(f_name);
-    console.log(l_name);
-    
-    console.log(sql);
-    res.json(["test"])
+    // After inserting the employee, send back all of the employees
+    sql = 'SELECT * FROM employees';
+    db.query(sql, (err, result) => {
+        if(err){
+            throw err
+        }
+        res.send(result);
+    })
 })
 
 app.get('/deleteallemployees', (req, res) => {
@@ -97,7 +79,7 @@ app.get('/deleteallemployees', (req, res) => {
         if(err){
             throw err
         }
-        console.log("All employees removed")
+        res.json("All employees removed.")
     })
     console.log("Should have removed all employees");
 })
