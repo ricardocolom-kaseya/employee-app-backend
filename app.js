@@ -24,13 +24,9 @@ const app = express();
 const cors = require('cors')
 app.use(cors())
 
-app.get('/test', (req, res) => {
-    res.send("this is a test page")
-})
-
 app.get('/getemployees', (req, res) => {
     console.log("Employees retrieved")
-    
+
     let sql = 'SELECT * FROM employees';
     db.query(sql, (err, result) => {
         if(err){
