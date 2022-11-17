@@ -159,7 +159,7 @@ app.get('/editskill', (req, res) => {
     let skill_name = req.get('skill_name')
     let skill_desc = req.get('skill_desc')
 
-    let sql = `UPDATE skill_levels SET skill_name = '${skill_name}', skill_desc = '${skill_desc}'`
+    let sql = `UPDATE skill_levels SET skill_name = '${skill_name}', skill_desc = '${skill_desc}' WHERE skill_id = '${skill_id}'`
 
     console.log(sql)
 
