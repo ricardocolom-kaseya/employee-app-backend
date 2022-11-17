@@ -24,6 +24,28 @@ const app = express();
 const cors = require('cors')
 app.use(cors())
 
+app.post('/authenticate', (req, res) => {
+    console.log("In backened, attempting to authenticate.")
+
+    let username = req.get('username')
+    let userpassword = req.get('userpassword')
+
+    let sql = `SELECT * FROM users WHERE username='${username}' AND userpassword='${userpassword}'`
+
+    console.log(sql)
+
+    db.query(sql, (err, result) => {
+        if(err){
+            throw err
+        }
+        console.log(result);
+        if(result.length > 0)
+            res.json("valid")
+        else
+            res.json("invalid");
+    })
+})
+
 app.get('/getemployees', (req, res) => {
     console.log("Employees retrieved")
 
