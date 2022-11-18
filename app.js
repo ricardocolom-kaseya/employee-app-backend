@@ -14,7 +14,7 @@ const db = mysql.createConnection({
 
 // Connect
 db.connect((err) => {
-    if(err){
+    if (err) {
         throw err;
     }
     console.log('MySQL Connected...');
@@ -35,30 +35,30 @@ app.post('/authenticate', (req, res) => {
     console.log(sql)
 
     db.query(sql, (err, result) => {
-        if(err){
+        if (err) {
             throw err
         }
         console.log(result);
-        if(result.length > 0)
+        if (result.length > 0)
             res.json("valid")
         else
             res.json("invalid");
     })
 })
 
-app.get('/getemployees', (req, res) => {
+app.get('/employees', (req, res) => {
     console.log("Employees retrieved")
 
     let sql = 'SELECT * FROM employees';
     db.query(sql, (err, result) => {
-        if(err){
+        if (err) {
             throw err
         }
         res.send(result);
     })
 })
 
-app.get('/createemployee', (req, res) => {
+app.post('/employees', (req, res) => {
     let employee_id = req.get('employee_id')
     let f_name = req.get('f_name')
     let l_name = req.get('l_name')
@@ -75,7 +75,7 @@ app.get('/createemployee', (req, res) => {
     console.log(sql);
 
     db.query(sql, (err, result) => {
-        if(err){
+        if (err) {
             throw err
         }
         console.log(result);
@@ -84,16 +84,16 @@ app.get('/createemployee', (req, res) => {
     // After inserting the employee, send back this employee
     sql = `SELECT * FROM employees WHERE employee_id = '${employee_id}'`;
     db.query(sql, (err, result) => {
-        if(err){
+        if (err) {
             throw err
         }
+        console.log(result)
         res.send(result);
     })
 })
 
-app.get('/editemployee', (req, res) => {
-
-    let employee_id = req.get('employee_id')
+app.put('/employees/:employee_id', (req, res) => {
+    let employee_id = req.get(req.params.employee_id)
 
     let f_name = req.get('f_name')
     let l_name = req.get('l_name')
@@ -110,54 +110,55 @@ app.get('/editemployee', (req, res) => {
     console.log(sql);
 
     db.query(sql, (err, result) => {
-        if(err){
+        if (err) {
             throw err
         }
         res.send(result);
     })
 })
 
-app.get('/deleteemployee', (req, res) => {
+app.delete('/employees', (req, res) => {
     let employee_id = req.get('employee_id')
+    let delete_all = req.get('delete_all')
 
-    let sql = `DELETE FROM employees WHERE employee_id = '${employee_id}'`
-    console.log(sql)
+    if (delete_all == "true") {
+        let sql = `DELETE FROM employees`
+        console.log(sql);
 
-    db.query(sql, (err, result) => {
-        if(err){
-            throw err
-        }
-        res.send(result);
-    })
+        db.query(sql, (err, result) => {
+            if (err) {
+                throw err
+            }
+            res.json("All employees removed.")
+        })
+        console.log("Should have removed all employees");
+    }
+    else {
+        let sql = `DELETE FROM employees WHERE employee_id = '${employee_id}'`
+        console.log(sql)
+
+        db.query(sql, (err, result) => {
+            if (err) {
+                throw err
+            }
+            res.send(result);
+        })
+    }
 })
 
-app.get('/deleteallemployees', (req, res) => {
-    let sql = `DELETE FROM employees`
-    console.log(sql);
-
-    db.query(sql, (err, result) => {
-        if(err){
-            throw err
-        }
-        res.json("All employees removed.")
-    })
-    console.log("Should have removed all employees");
-})
-
-app.get('/getskills', (req, res) => {
+app.get('/skills', (req, res) => {
     let sql = 'SELECT * FROM skill_levels'
     console.log("Skills retrieved")
 
     db.query(sql, (err, result) => {
-        if(err){
+        if (err) {
             throw err
         }
         res.send(result)
     })
 })
 
-app.get('/createskill', (req, res) => {
-
+app.post('/skills', (req, res) => {
     let skill_id = req.get('skill_id')
 
     let skill_name = req.get('skill_name')
@@ -168,15 +169,16 @@ app.get('/createskill', (req, res) => {
     console.log(sql);
 
     db.query(sql, (err, result) => {
-        if(err){
+        if (err) {
             throw err
         }
         res.send(result);
     })
 })
 
-app.get('/editskill', (req, res) => {
-    let skill_id = req.get('skill_id')
+app.put('/skills/:skill_id', (req, res) => {
+    console.log(req.params.skill_id)
+    let skill_id = req.get(req.params.skill_id)
 
     let skill_name = req.get('skill_name')
     let skill_desc = req.get('skill_desc')
@@ -186,40 +188,41 @@ app.get('/editskill', (req, res) => {
     console.log(sql)
 
     db.query(sql, (err, result) => {
-        if(err){
+        if (err) {
             throw err
         }
         res.send(result);
     })
 })
 
-app.get('/deleteskill', (req, res) => {
+app.delete('/skills', (req, res) => {
     let skill_id = req.get('skill_id')
+    let delete_all = req.get('delete_all')
 
-    let sql = `DELETE FROM skill_levels WHERE skill_id = '${skill_id}'`
-    console.log(sql)
+    if (delete_all == "true") {
+        let sql = `DELETE FROM skill_levels`
+        console.log(sql);
 
-    db.query(sql, (err, result) => {
-        if(err){
-            throw err
-        }
-        res.send(result);
-    })
+        db.query(sql, (err, result) => {
+            if (err) {
+                throw err
+            }
+            res.json("All skills removed.")
+        })
+        console.log("Should have removed all skills");
+    }
+    else {
+        let sql = `DELETE FROM skill_levels WHERE skill_id = '${skill_id}'`
+        console.log(sql)
+
+        db.query(sql, (err, result) => {
+            if (err) {
+                throw err
+            }
+            res.send(result);
+        })
+    }
 })
-
-app.get('/deleteallskills', (req, res) => {
-    let sql = `DELETE FROM skill_levels`
-    console.log(sql);
-
-    db.query(sql, (err, result) => {
-        if(err){
-            throw err
-        }
-        res.json("All skills removed.")
-    })
-    console.log("Should have removed all skills");
-})
-
 
 app.listen('4000', () => {
     console.log("Server started on port 4000...");
