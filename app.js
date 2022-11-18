@@ -50,6 +50,15 @@ app.get('/employees', (req, res) => {
     console.log("Employees retrieved")
 
     let sql = 'SELECT * FROM employees';
+
+    if (req.get('contains') != "") {
+        sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${req.get('contains')}%'`
+    }
+
+    sql += ` ORDER BY l_name ${req.get('order')}`
+
+    console.log(sql)
+
     db.query(sql, (err, result) => {
         if (err) {
             throw err
@@ -93,7 +102,7 @@ app.post('/employees', (req, res) => {
 })
 
 app.put('/employees/:employee_id', (req, res) => {
-    let employee_id = req.get(req.params.employee_id)
+    let employee_id = req.params.employee_id
 
     let f_name = req.get('f_name')
     let l_name = req.get('l_name')
@@ -109,6 +118,9 @@ app.put('/employees/:employee_id', (req, res) => {
     let sql = `UPDATE employees SET f_name = '${f_name}', l_name = '${l_name}', dob = '${dob}', email = '${email}', skill_id = '${skill_id}', is_active = ${is_active} WHERE employee_id = '${employee_id}'`
     console.log(sql);
 
+    console.log("asdsad")
+    console.log(sql)
+
     db.query(sql, (err, result) => {
         if (err) {
             throw err
@@ -119,9 +131,8 @@ app.put('/employees/:employee_id', (req, res) => {
 
 app.delete('/employees', (req, res) => {
     let employee_id = req.get('employee_id')
-    let delete_all = req.get('delete_all')
 
-    if (delete_all == "true") {
+    if (req.get('delete_all')) {
         let sql = `DELETE FROM employees`
         console.log(sql);
 
@@ -147,7 +158,7 @@ app.delete('/employees', (req, res) => {
 })
 
 app.get('/skills', (req, res) => {
-    let sql = 'SELECT * FROM skill_levels'
+    let sql = 'SELECT * FROM skill_levels ORDER BY skill_name ASC'
     console.log("Skills retrieved")
 
     db.query(sql, (err, result) => {
@@ -177,8 +188,8 @@ app.post('/skills', (req, res) => {
 })
 
 app.put('/skills/:skill_id', (req, res) => {
-    console.log(req.params.skill_id)
-    let skill_id = req.get(req.params.skill_id)
+
+    let skill_id = req.params.skill_id
 
     let skill_name = req.get('skill_name')
     let skill_desc = req.get('skill_desc')
@@ -197,9 +208,8 @@ app.put('/skills/:skill_id', (req, res) => {
 
 app.delete('/skills', (req, res) => {
     let skill_id = req.get('skill_id')
-    let delete_all = req.get('delete_all')
 
-    if (delete_all == "true") {
+    if (req.get('delete_all')) {
         let sql = `DELETE FROM skill_levels`
         console.log(sql);
 
