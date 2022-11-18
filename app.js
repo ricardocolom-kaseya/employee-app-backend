@@ -51,11 +51,14 @@ app.get('/employees', (req, res) => {
 
     let sql = 'SELECT * FROM employees';
 
-    if (req.get('contains') != "") {
+    if (req.get('contains') && req.get('contains') != "") {
         sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${req.get('contains')}%'`
     }
 
-    sql += ` ORDER BY l_name ${req.get('order')}`
+    if(req.get('order'))
+        sql += ` ORDER BY l_name ${req.get('order')}`
+    else
+    sql += ` ORDER BY l_name ASC`
 
     console.log(sql)
 
