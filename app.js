@@ -50,8 +50,18 @@ app.post('/authenticate', (req, res) => {
 app.get('/employees', (req, res) => {
     let sql = 'SELECT * FROM employees';
 
-    if (req.get('contains') && req.get('contains') != "") {
-        sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${req.get('contains')}%'`
+    let hasCharacters = (req.get('hasCharacters') != "")
+    let hasSkill = (req.get('hasSkill') != "")
+
+    if (hasCharacters && hasSkill) {
+        sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${req.get('hasCharacters')}%'`
+        sql += ` AND skill_id='${req.get('hasSkill')}'`
+    }
+    else if (hasCharacters) {
+        sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${req.get('hasCharacters')}%'`
+    }
+    else if (hasSkill) {
+        sql += ` WHERE skill_id='${req.get('hasSkill')}'`
     }
 
     if (req.get('order'))
@@ -65,7 +75,7 @@ app.get('/employees', (req, res) => {
         if (err) {
             throw err
         }
-        console.log(result)
+        //console.log(result)
         res.status(200).json(result);
     })
 })
