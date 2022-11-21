@@ -39,26 +39,25 @@ app.post('/authenticate', (req, res) => {
             throw err
         }
         console.log(result);
-        if (result.length > 0)
-            res.json("valid")
+        if (result.length > 0) {
+            res.status(200).json('Status: Good');
+        }
         else
-            res.json("invalid");
+            res.status(401).json('Status: Unauthorized');
     })
 })
 
 app.get('/employees', (req, res) => {
-    console.log("Employees retrieved")
-
     let sql = 'SELECT * FROM employees';
 
     if (req.get('contains') && req.get('contains') != "") {
         sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${req.get('contains')}%'`
     }
 
-    if(req.get('order'))
+    if (req.get('order'))
         sql += ` ORDER BY l_name ${req.get('order')}`
     else
-    sql += ` ORDER BY l_name ASC`
+        sql += ` ORDER BY l_name ASC`
 
     console.log(sql)
 
@@ -66,7 +65,8 @@ app.get('/employees', (req, res) => {
         if (err) {
             throw err
         }
-        res.send(result);
+        console.log(result)
+        res.status(200).json(result);
     })
 })
 
@@ -90,7 +90,6 @@ app.post('/employees', (req, res) => {
         if (err) {
             throw err
         }
-        console.log(result);
     })
 
     // After inserting the employee, send back this employee
@@ -100,7 +99,7 @@ app.post('/employees', (req, res) => {
             throw err
         }
         console.log(result)
-        res.send(result);
+        res.status(200).json(result);
     })
 })
 
@@ -128,7 +127,7 @@ app.put('/employees/:employee_id', (req, res) => {
         if (err) {
             throw err
         }
-        res.send(result);
+        res.status(200).json(result);
     })
 })
 
@@ -137,15 +136,14 @@ app.delete('/employees', (req, res) => {
 
     if (req.get('delete_all')) {
         let sql = `DELETE FROM employees`
-        console.log(sql);
 
         db.query(sql, (err, result) => {
             if (err) {
                 throw err
             }
-            res.json("All employees removed.")
+            res.status(200).json("All employees removed.")
+            console.log("Should have removed all employees");
         })
-        console.log("Should have removed all employees");
     }
     else {
         let sql = `DELETE FROM employees WHERE employee_id = '${employee_id}'`
@@ -155,20 +153,20 @@ app.delete('/employees', (req, res) => {
             if (err) {
                 throw err
             }
-            res.send(result);
+            console.log(result)
+            res.status(200).json("Removed an employee");
         })
     }
 })
 
 app.get('/skills', (req, res) => {
     let sql = 'SELECT * FROM skill_levels ORDER BY skill_name ASC'
-    console.log("Skills retrieved")
 
     db.query(sql, (err, result) => {
         if (err) {
             throw err
         }
-        res.send(result)
+        res.status(200).json(result)
     })
 })
 
@@ -186,7 +184,7 @@ app.post('/skills', (req, res) => {
         if (err) {
             throw err
         }
-        res.send(result);
+        res.status(200).json(result);
     })
 })
 
@@ -205,7 +203,7 @@ app.put('/skills/:skill_id', (req, res) => {
         if (err) {
             throw err
         }
-        res.send(result);
+        res.status(200).json(result);
     })
 })
 
@@ -220,7 +218,7 @@ app.delete('/skills', (req, res) => {
             if (err) {
                 throw err
             }
-            res.json("All skills removed.")
+            res.status(200).json("All skills removed.")
         })
         console.log("Should have removed all skills");
     }
@@ -232,7 +230,7 @@ app.delete('/skills', (req, res) => {
             if (err) {
                 throw err
             }
-            res.send(result);
+            res.status(200).json("Removed a skill");
         })
     }
 })
