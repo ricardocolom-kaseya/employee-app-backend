@@ -47,7 +47,7 @@ function authenticateToken(data) {
 }
 
 function generateAccessToken(user) {
-    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' })
+    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '5s' })
 }
 
 app.post('/authenticate', (req, res) => {
