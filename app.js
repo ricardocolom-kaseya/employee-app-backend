@@ -2,7 +2,15 @@ require('dotenv/config')
 
 const express = require('express');
 const mysql = require('mysql2');
-var random = require('random-name')
+
+const app = express();
+app.use(express.json())
+app.use(express.urlencoded({extended: true}))
+
+const cors = require('cors');
+app.use(cors())
+
+const { faker } = require("@faker-js/faker")
 
 // Create connection
 const db = mysql.createConnection({
@@ -19,10 +27,6 @@ db.connect((err) => {
     }
     console.log('MySQL Connected...');
 })
-
-const app = express();
-const cors = require('cors')
-app.use(cors())
 
 app.post('/authenticate', (req, res) => {
     console.log("In backened, attempting to authenticate.")
@@ -81,15 +85,20 @@ app.get('/employees', (req, res) => {
 })
 
 app.post('/employees', (req, res) => {
-    let employee_id = req.get('employee_id')
-    let f_name = req.get('f_name')
-    let l_name = req.get('l_name')
-    let yyyy = req.get('yyyy')
-    let mm = req.get('mm')
-    let dd = req.get('dd')
-    let email = req.get('email')
-    let skill_id = req.get('skill_id')
-    let is_active = req.get('is_active')
+    console.log("swag")
+
+    let token = req.body.token
+
+    let employee_id = faker.datatype.uuid();
+    
+    let f_name = req.body.employee.f_name
+    let l_name = req.body.employee.l_name
+    let yyyy = req.body.employee.yyyy
+    let mm = req.body.employee.mm
+    let dd = req.body.employee.dd
+    let email = req.body.employee.email
+    let skill_id = req.body.employee.skill_id
+    let is_active = req.body.employee.is_active
 
     let dob = `${yyyy}-${mm}-${dd}`
 
@@ -100,16 +109,8 @@ app.post('/employees', (req, res) => {
         if (err) {
             throw err
         }
-    })
-
-    // After inserting the employee, send back this employee
-    sql = `SELECT * FROM employees WHERE employee_id = '${employee_id}'`;
-    db.query(sql, (err, result) => {
-        if (err) {
-            throw err
-        }
         console.log(result)
-        res.status(200).json(result);
+        res.status(200).json(employee_id);
     })
 })
 
