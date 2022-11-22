@@ -5,16 +5,14 @@ const mysql = require('mysql2');
 
 const app = express();
 app.use(express.json())
-app.use(express.urlencoded({extended: true}))
+app.use(express.urlencoded({ extended: true }))
 
 const cors = require('cors');
 app.use(cors())
 
 const { faker } = require("@faker-js/faker")
 
-function isTokenValid(token) {
-    return true;
-}
+const jwt = require('jsonwebtoken')
 
 // Create connection
 const db = mysql.createConnection({
@@ -32,11 +30,34 @@ db.connect((err) => {
     console.log('MySQL Connected...');
 })
 
+function authenticateToken(data) {
+    const authHeader = data
+    const token = authHeader && authHeader.split(' ')[1]
+
+    if (token == null) return false
+
+    return jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
+        if (err) {
+            console.log("Invalid token");
+            return false;
+        }
+        else
+            return true;
+    })
+}
+
+function generateAccessToken(user) {
+    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' })
+}
+
 app.post('/authenticate', (req, res) => {
     console.log("In backened, attempting to authenticate.")
 
-    let username = req.get('username')
-    let userpassword = req.get('userpassword')
+    let username = req.body.username
+    let userpassword = req.body.userpassword
+    const user = { name: username }
+
+    const accessToken = generateAccessToken(user)
 
     let sql = `SELECT * FROM users WHERE username='${username}' AND userpassword='${userpassword}'`
 
@@ -48,34 +69,42 @@ app.post('/authenticate', (req, res) => {
         }
         //console.log(result);
         if (result.length > 0) {
-            res.status(200).json('Status: Good');
+            res.status(200).json({ accessToken: accessToken });
         }
         else
-            res.status(401).json('Status: Unauthorized');
+            res.status(401).json().json('Status: Unauthorized');
     })
 })
 
 app.get('/employees', (req, res) => {
+
+    if (!authenticateToken(req.get('Authorization'))) {
+        res.status(401).json();
+        return;
+    }
+
+    let searchParams = JSON.parse(req.get('Search'))
+
+    console.log(searchParams)
+
     let sql = 'SELECT * FROM employees';
 
-    let hasCharacters = (req.get('hasCharacters') != "")
-    let hasSkill = (req.get('hasSkill') != "")
+    let hasCharacters = (searchParams.includesCharacters != "")
+    let hasSkill = (searchParams.includesSkill != "")
+    let order = searchParams.order
 
     if (hasCharacters && hasSkill) {
-        sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${req.get('hasCharacters')}%'`
-        sql += ` AND skill_id='${req.get('hasSkill')}'`
+        sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${searchParams.includesCharacters}%'`
+        sql += ` AND skill_id='${searchParams.includesSkill}'`
     }
     else if (hasCharacters) {
-        sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${req.get('hasCharacters')}%'`
+        sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${searchParams.includesCharacters}%'`
     }
     else if (hasSkill) {
-        sql += ` WHERE skill_id='${req.get('hasSkill')}'`
+        sql += ` WHERE skill_id='${searchParams.includesSkill}'`
     }
 
-    if (req.get('order'))
-        sql += ` ORDER BY l_name ${req.get('order')}`
-    else
-        sql += ` ORDER BY l_name ASC`
+    sql += ` ORDER BY l_name ${order}`
 
     console.log(sql)
 
@@ -90,12 +119,13 @@ app.get('/employees', (req, res) => {
 
 app.post('/employees', (req, res) => {
 
-    let token = req.body.token
-    if(!isTokenValid(token))
-        res.status(401);
+    if (!authenticateToken(req.get('Authorization'))) {
+        console.log("reached here")
+        return res.status(401).json();
+    }
 
     let employee_id = faker.datatype.uuid();
-    
+
     let f_name = req.body.employee.f_name
     let l_name = req.body.employee.l_name
     let yyyy = req.body.employee.yyyy
@@ -120,9 +150,11 @@ app.post('/employees', (req, res) => {
 })
 
 app.put('/employees/:employee_id', (req, res) => {
-    let token = req.body.token
-    if(!isTokenValid(token))
-        res.status(401);
+
+    if (!authenticateToken(req.get('Authorization'))) {
+        res.status(401).json();
+        return;
+    }
 
     let employee_id = req.params.employee_id
 
@@ -149,6 +181,12 @@ app.put('/employees/:employee_id', (req, res) => {
 })
 
 app.delete('/employees', (req, res) => {
+
+    if (!authenticateToken(req.get('Authorization'))) {
+        res.status(401).json();
+        return;
+    }
+
     let employee_id = req.body.employee_id
 
     console.log(employee_id);
@@ -179,6 +217,12 @@ app.delete('/employees', (req, res) => {
 })
 
 app.get('/skills', (req, res) => {
+
+    if (!authenticateToken(req.get('Authorization'))) {
+        res.status(401).json();
+        return;
+    }
+
     let sql = 'SELECT * FROM skill_levels ORDER BY skill_name ASC'
 
     db.query(sql, (err, result) => {
@@ -190,6 +234,12 @@ app.get('/skills', (req, res) => {
 })
 
 app.post('/skills', (req, res) => {
+
+    if (!authenticateToken(req.get('Authorization'))) {
+        res.status(401).json();
+        return;
+    }
+
     let skill_id = faker.datatype.uuid()
 
     let skill_name = req.body.skill_name
@@ -209,9 +259,10 @@ app.post('/skills', (req, res) => {
 
 app.put('/skills/:skill_id', (req, res) => {
 
-    let token = req.body.token
-    if(!isTokenValid(token))
-        res.status(401);
+    if (!authenticateToken(req.get('Authorization'))) {
+        res.status(401).json();
+        return;
+    }
 
     let skill_id = req.params.skill_id
 
@@ -231,6 +282,12 @@ app.put('/skills/:skill_id', (req, res) => {
 })
 
 app.delete('/skills', (req, res) => {
+
+    if (!authenticateToken(req.get('Authorization'))) {
+        res.status(401).json();
+        return;
+    }
+
     let skill_id = req.body.skill_id
     console.log(skill_id)
 
