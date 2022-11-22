@@ -12,6 +12,10 @@ app.use(cors())
 
 const { faker } = require("@faker-js/faker")
 
+function isTokenValid(token) {
+    return true;
+}
+
 // Create connection
 const db = mysql.createConnection({
     host: 'localhost',
@@ -42,7 +46,7 @@ app.post('/authenticate', (req, res) => {
         if (err) {
             throw err
         }
-        console.log(result);
+        //console.log(result);
         if (result.length > 0) {
             res.status(200).json('Status: Good');
         }
@@ -85,9 +89,10 @@ app.get('/employees', (req, res) => {
 })
 
 app.post('/employees', (req, res) => {
-    console.log("swag")
 
     let token = req.body.token
+    if(!isTokenValid(token))
+        res.status(401);
 
     let employee_id = faker.datatype.uuid();
     
@@ -109,50 +114,53 @@ app.post('/employees', (req, res) => {
         if (err) {
             throw err
         }
-        console.log(result)
+        //console.log(result)
         res.status(200).json(employee_id);
     })
 })
 
 app.put('/employees/:employee_id', (req, res) => {
+    let token = req.body.token
+    if(!isTokenValid(token))
+        res.status(401);
+
     let employee_id = req.params.employee_id
 
-    let f_name = req.get('f_name')
-    let l_name = req.get('l_name')
-    let yyyy = req.get('yyyy')
-    let mm = req.get('mm')
-    let dd = req.get('dd')
-    let email = req.get('email')
-    let skill_id = req.get('skill_id')
-    let is_active = req.get('is_active')
+    let f_name = req.body.employee.f_name
+    let l_name = req.body.employee.l_name
+    let yyyy = req.body.employee.yyyy
+    let mm = req.body.employee.mm
+    let dd = req.body.employee.dd
+    let email = req.body.employee.email
+    let skill_id = req.body.employee.skill_id
+    let is_active = req.body.employee.is_active
 
     let dob = `${yyyy}-${mm}-${dd}`
 
     let sql = `UPDATE employees SET f_name = '${f_name}', l_name = '${l_name}', dob = '${dob}', email = '${email}', skill_id = '${skill_id}', is_active = ${is_active} WHERE employee_id = '${employee_id}'`
     console.log(sql);
 
-    console.log("asdsad")
-    console.log(sql)
-
     db.query(sql, (err, result) => {
         if (err) {
             throw err
         }
-        res.status(200).json(result);
+        res.status(200).json(req.body.employee);
     })
 })
 
 app.delete('/employees', (req, res) => {
-    let employee_id = req.get('employee_id')
+    let employee_id = req.body.employee_id
 
-    if (req.get('delete_all')) {
+    console.log(employee_id);
+
+    if (!employee_id) {
         let sql = `DELETE FROM employees`
 
         db.query(sql, (err, result) => {
             if (err) {
                 throw err
             }
-            res.status(200).json("All employees removed.")
+            res.status(200).json("All")
             console.log("Should have removed all employees");
         })
     }
@@ -164,8 +172,8 @@ app.delete('/employees', (req, res) => {
             if (err) {
                 throw err
             }
-            console.log(result)
-            res.status(200).json("Removed an employee");
+            //console.log(result)
+            res.status(200).json("Deleted " + employee_id);
         })
     }
 })
@@ -182,10 +190,10 @@ app.get('/skills', (req, res) => {
 })
 
 app.post('/skills', (req, res) => {
-    let skill_id = req.get('skill_id')
+    let skill_id = faker.datatype.uuid()
 
-    let skill_name = req.get('skill_name')
-    let skill_desc = req.get('skill_desc')
+    let skill_name = req.body.skill_name
+    let skill_desc = req.body.skill_desc
 
     let sql = `INSERT INTO skill_levels VALUES('${skill_id}', '${skill_name}', '${skill_desc}')`
 
@@ -195,16 +203,20 @@ app.post('/skills', (req, res) => {
         if (err) {
             throw err
         }
-        res.status(200).json(result);
+        res.status(200).json(skill_id);
     })
 })
 
 app.put('/skills/:skill_id', (req, res) => {
 
+    let token = req.body.token
+    if(!isTokenValid(token))
+        res.status(401);
+
     let skill_id = req.params.skill_id
 
-    let skill_name = req.get('skill_name')
-    let skill_desc = req.get('skill_desc')
+    let skill_name = req.body.skill_name
+    let skill_desc = req.body.skill_desc
 
     let sql = `UPDATE skill_levels SET skill_name = '${skill_name}', skill_desc = '${skill_desc}' WHERE skill_id = '${skill_id}'`
 
@@ -214,14 +226,15 @@ app.put('/skills/:skill_id', (req, res) => {
         if (err) {
             throw err
         }
-        res.status(200).json(result);
+        res.status(200).json(employee_id);
     })
 })
 
 app.delete('/skills', (req, res) => {
-    let skill_id = req.get('skill_id')
+    let skill_id = req.body.skill_id
+    console.log(skill_id)
 
-    if (req.get('delete_all')) {
+    if (!skill_id) {
         let sql = `DELETE FROM skill_levels`
         console.log(sql);
 
