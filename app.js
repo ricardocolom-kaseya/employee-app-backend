@@ -277,7 +277,7 @@ app.put('/skills/:skill_id', (req, res) => {
         if (err) {
             throw err
         }
-        res.status(200).json(employee_id);
+        res.status(200).json(skill_id);
     })
 })
 
