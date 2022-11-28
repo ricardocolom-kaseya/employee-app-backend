@@ -120,7 +120,6 @@ app.get('/employees', (req, res) => {
 app.post('/employees', (req, res) => {
 
     if (!authenticateToken(req.get('Authorization'))) {
-        console.log("reached here")
         return res.status(401).json();
     }
 
