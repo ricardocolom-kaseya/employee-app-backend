@@ -13,4 +13,4 @@ ACCESS_TOKEN_SECRET=your_jwt_access_token_secret
 
 Then type <code>nodemon</code> in the terminal.
 
-Note: Your jwt access token can be pretty much any string, a long (36 char for example) hex string is what I personally used.
+Note: Your jwt access token can be pretty much any string, a long (36 char) hex string is what I personally used.
