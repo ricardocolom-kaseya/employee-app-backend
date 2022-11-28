@@ -63,6 +63,30 @@ app.post('/authenticate', (req, res) => {
 
     console.log(sql)
 
+    let make_employees_table = "CREATE TABLE if not exists employees (employee_id varchar(36) NOT NULL, f_name text, l_name text, dob text, email text, skill_id text, is_active int DEFAULT NULL, PRIMARY KEY (employee_id));  "
+
+    let make_skills_table = "CREATE TABLE if not exists skill_levels (skill_id varchar(36) NOT NULL, skill_name text, skill_desc text, PRIMARY KEY (skill_id)); "
+
+    let make_users_table = "CREATE TABLE if not exists users (id varchar(36) NOT NULL, username varchar(100) DEFAULT NULL, userpassword varchar(100) DEFAULT NULL, PRIMARY KEY (id))"
+
+    db.query(make_employees_table, (err, result) => {
+        if (err) {
+            throw err
+        }
+    })
+
+    db.query(make_skills_table, (err, result) => {
+        if (err) {
+            throw err
+        }
+    })
+
+    db.query(make_users_table, (err, result) => {
+        if (err) {
+            throw err
+        }
+    })
+
     db.query(sql, (err, result) => {
         if (err) {
             throw err
@@ -222,7 +246,7 @@ app.get('/skills', (req, res) => {
         return;
     }
 
-    let sql = 'SELECT * FROM skill_levels ORDER BY skill_name ASC'
+    let sql = 'SELECT * FROM skills ORDER BY skill_name ASC'
 
     db.query(sql, (err, result) => {
         if (err) {
@@ -244,7 +268,7 @@ app.post('/skills', (req, res) => {
     let skill_name = req.body.skill_name
     let skill_desc = req.body.skill_desc
 
-    let sql = `INSERT INTO skill_levels VALUES('${skill_id}', '${skill_name}', '${skill_desc}')`
+    let sql = `INSERT INTO skills VALUES('${skill_id}', '${skill_name}', '${skill_desc}')`
 
     console.log(sql);
 
@@ -268,7 +292,7 @@ app.put('/skills/:skill_id', (req, res) => {
     let skill_name = req.body.skill_name
     let skill_desc = req.body.skill_desc
 
-    let sql = `UPDATE skill_levels SET skill_name = '${skill_name}', skill_desc = '${skill_desc}' WHERE skill_id = '${skill_id}'`
+    let sql = `UPDATE skills SET skill_name = '${skill_name}', skill_desc = '${skill_desc}' WHERE skill_id = '${skill_id}'`
 
     console.log(sql)
 
@@ -291,7 +315,7 @@ app.delete('/skills', (req, res) => {
     console.log(skill_id)
 
     if (!skill_id) {
-        let sql = `DELETE FROM skill_levels`
+        let sql = `DELETE FROM skills`
         console.log(sql);
 
         db.query(sql, (err, result) => {
@@ -303,7 +327,7 @@ app.delete('/skills', (req, res) => {
         console.log("Should have removed all skills");
     }
     else {
-        let sql = `DELETE FROM skill_levels WHERE skill_id = '${skill_id}'`
+        let sql = `DELETE FROM skills WHERE skill_id = '${skill_id}'`
         console.log(sql)
 
         db.query(sql, (err, result) => {
