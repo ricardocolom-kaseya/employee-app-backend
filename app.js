@@ -91,12 +91,12 @@ app.post('/authenticate', (req, res) => {
         if (err) {
             throw err
         }
-        //console.log(result);
+        console.log(result);
         if (result.length > 0) {
             res.status(200).json({ accessToken: accessToken });
         }
         else
-            res.status(401).json().json('Status: Unauthorized');
+            res.status(401).json('Status: Unauthorized');
     })
 })
 
