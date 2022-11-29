@@ -20,4 +20,4 @@ ACCESS_TOKEN_SECRET=your_jwt_access_token_secret
 
 - Type <code>nodemon</code> in the terminal to start the server.
 
-Main app can be found [here](https://github.com/ricardocolom-kaseya/employee-app/)
+Main app can be found [here](https://github.com/ricardocolom-kaseya/employee-app/).
