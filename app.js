@@ -50,10 +50,12 @@ function authenticateToken(data) {
     })
 }
 
+// Generate the user access token
 function generateAccessToken(user) {
     return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10m' })
 }
 
+// Authenticate the user
 app.post('/authenticate', (req, res) => {
     console.log("In backened, attempting to authenticate.")
 
@@ -106,6 +108,7 @@ app.post('/authenticate', (req, res) => {
 
 })
 
+// Get all employees, or employees with specific criteria
 app.get('/employees', (req, res) => {
 
     if (!authenticateToken(req.get('Authorization'))) {
@@ -183,6 +186,7 @@ app.get('/employees', (req, res) => {
     }
 })
 
+// Add a new employee
 app.post('/employees', (req, res) => {
 
     if (!authenticateToken(req.get('Authorization'))) {
@@ -211,24 +215,23 @@ app.post('/employees', (req, res) => {
         }
         //console.log(result)
 
-        let currEmployeeCache = employeeCache.get("employees")
+        let newEmployeeBody = {
+            employee_id: employee_id,
+            f_name: f_name,
+            l_name: l_name,
+            dob: dob,
+            email: email,
+            skill_id: skill_id,
+            is_active: is_active
+        }
 
-        // currEmployeeCache.push({
-        //     employee_id: employee_id,
-        //     f_name: f_name,
-        //     l_name: l_name,
-        //     dob: dob,
-        //     email: email,
-        //     skill_id: skill_id,
-        //     is_active: is_active
-        // })
-
-        // employeeCache.set(currEmployeeCache)
+        employeeCache.set(employee_id, newEmployeeBody)
 
         res.status(200).json(employee_id);
     })
 })
 
+// Edit an employee
 app.put('/employees/:employee_id', (req, res) => {
 
     if (!authenticateToken(req.get('Authorization'))) {
@@ -256,6 +259,19 @@ app.put('/employees/:employee_id', (req, res) => {
         if (err) {
             throw err
         }
+
+        let newEmployeeBody = {
+            employee_id: employee_id,
+            f_name: f_name,
+            l_name: l_name,
+            dob: dob,
+            email: email,
+            skill_id: skill_id,
+            is_active: is_active
+        }
+
+        employeeCache.set(employee_id, newEmployeeBody)
+
         res.status(200).json(req.body.employee);
     })
 })
@@ -278,6 +294,7 @@ app.delete('/employees', (req, res) => {
             if (err) {
                 throw err
             }
+            employeeCache.del(employeeCache.keys())
             res.status(200).json("All")
             console.log("Should have removed all employees");
         })
@@ -291,6 +308,7 @@ app.delete('/employees', (req, res) => {
                 throw err
             }
             //console.log(result)
+            employeeCache.del(employee_id)
             res.status(200).json("Deleted " + employee_id);
         })
     }
