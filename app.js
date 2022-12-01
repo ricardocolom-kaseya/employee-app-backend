@@ -10,6 +10,10 @@ app.use(express.urlencoded({ extended: true }))
 const cors = require('cors');
 app.use(cors())
 
+const NodeCache = require('node-cache')
+
+const employeeCache = new NodeCache()
+
 const { faker } = require("@faker-js/faker")
 
 const jwt = require('jsonwebtoken')
@@ -57,35 +61,9 @@ app.post('/authenticate', (req, res) => {
     let userpassword = req.body.userpassword
     const user = { name: username }
 
-    const accessToken = generateAccessToken(user)
-
     let sql = `SELECT * FROM users WHERE username='${username}' AND userpassword='${userpassword}'`
 
     console.log(sql)
-
-    let make_employees_table = "CREATE TABLE if not exists employees (employee_id varchar(36) NOT NULL, f_name text, l_name text, dob text, email text, skill_id text, is_active int DEFAULT NULL, PRIMARY KEY (employee_id));  "
-
-    let make_skills_table = "CREATE TABLE if not exists skill_levels (skill_id varchar(36) NOT NULL, skill_name text, skill_desc text, PRIMARY KEY (skill_id)); "
-
-    let make_users_table = "CREATE TABLE if not exists users (id varchar(36) NOT NULL, username varchar(100) DEFAULT NULL, userpassword varchar(100) DEFAULT NULL, PRIMARY KEY (id))"
-
-    db.query(make_employees_table, (err, result) => {
-        if (err) {
-            throw err
-        }
-    })
-
-    db.query(make_skills_table, (err, result) => {
-        if (err) {
-            throw err
-        }
-    })
-
-    db.query(make_users_table, (err, result) => {
-        if (err) {
-            throw err
-        }
-    })
 
     db.query(sql, (err, result) => {
         if (err) {
@@ -93,11 +71,39 @@ app.post('/authenticate', (req, res) => {
         }
         console.log(result);
         if (result.length > 0) {
-            res.status(200).json({ accessToken: accessToken });
+
+            let make_employees_table = "CREATE TABLE if not exists employees (employee_id varchar(36) NOT NULL, f_name text, l_name text, dob text, email text, skill_id text, is_active int DEFAULT NULL, PRIMARY KEY (employee_id));  "
+
+            let make_skills_table = "CREATE TABLE if not exists skill_levels (skill_id varchar(36) NOT NULL, skill_name text, skill_desc text, PRIMARY KEY (skill_id)); "
+
+            let make_users_table = "CREATE TABLE if not exists users (id varchar(36) NOT NULL, username varchar(100) DEFAULT NULL, userpassword varchar(100) DEFAULT NULL, PRIMARY KEY (id))"
+
+            db.query(make_employees_table, (err, result) => {
+                if (err) {
+                    throw err
+                }
+            })
+
+            db.query(make_skills_table, (err, result) => {
+                if (err) {
+                    throw err
+                }
+            })
+
+            db.query(make_users_table, (err, result) => {
+                if (err) {
+                    throw err
+                }
+            })
+
+            const generatedToken = generateAccessToken(user)
+
+            res.status(200).json({ accessToken: generatedToken });
         }
         else
             res.status(401).json('Status: Unauthorized');
     })
+
 })
 
 app.get('/employees', (req, res) => {
@@ -109,36 +115,72 @@ app.get('/employees', (req, res) => {
 
     let searchParams = JSON.parse(req.get('Search'))
 
-    console.log(searchParams)
-
-    let sql = 'SELECT * FROM employees';
-
     let hasCharacters = (searchParams.includesCharacters != "")
     let hasSkill = (searchParams.includesSkill != "")
-    let order = searchParams.order
 
-    if (hasCharacters && hasSkill) {
-        sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${searchParams.includesCharacters}%'`
-        sql += ` AND skill_id='${searchParams.includesSkill}'`
-    }
-    else if (hasCharacters) {
-        sql += ` WHERE CONCAT(f_name, " ", l_name) LIKE '%${searchParams.includesCharacters}%'`
-    }
-    else if (hasSkill) {
-        sql += ` WHERE skill_id='${searchParams.includesSkill}'`
-    }
+    if (employeeCache.keys().length > 0) {
 
-    sql += ` ORDER BY l_name ${order}`
+        let out = [];
 
-    console.log(sql)
+        if (hasCharacters || hasSkill) {
+            
+            employeeCache.keys().forEach(key => {
+                let currEmployee = employeeCache.get(key)
+                if (hasCharacters && hasSkill) {
+                    let fullName = (currEmployee.f_name + currEmployee.l_name).toLowerCase()
 
-    db.query(sql, (err, result) => {
-        if (err) {
-            throw err
+                    if (fullName.includes(searchParams.includesCharacters) && currEmployee.skill_id === searchParams.includesSkill) {
+                        out.push(currEmployee);
+                    }
+                }
+                else if (hasCharacters) {
+                    let fullName = (currEmployee.f_name + currEmployee.l_name).toLowerCase()
+
+                    if (fullName.includes(searchParams.includesCharacters)) {
+                        out.push(currEmployee);
+                    }
+                }
+                else if (hasSkill) {
+                    if (currEmployee.skill_id === searchParams.includesSkill)
+                        out.push(currEmployee);
+                }
+            });
         }
-        //console.log(result)
-        res.status(200).json(result);
-    })
+        else {
+            employeeCache.keys().forEach(key => {                
+                let currEmployee = employeeCache.get(key)
+                out.push(currEmployee)
+            });
+        }
+
+        if (searchParams.order == "DESC")
+            out = out.reverse();
+
+        res.status(200).json(out)
+    }
+    else {
+        let sql = 'SELECT * FROM employees ORDER BY l_name ASC';
+
+        console.log(sql)
+
+        db.query(sql, (err, result) => {
+            if (err) {
+                throw err
+            }
+            //console.log(result)
+            result.forEach(employee => {
+                employeeCache.set(employee.employee_id, employee)
+            });
+
+            let out = [];
+
+            employeeCache.keys().forEach(key => {
+                out.push(employeeCache.get(key))
+            });
+
+            res.status(200).json(out);
+        })
+    }
 })
 
 app.post('/employees', (req, res) => {
@@ -168,6 +210,21 @@ app.post('/employees', (req, res) => {
             throw err
         }
         //console.log(result)
+
+        let currEmployeeCache = employeeCache.get("employees")
+
+        // currEmployeeCache.push({
+        //     employee_id: employee_id,
+        //     f_name: f_name,
+        //     l_name: l_name,
+        //     dob: dob,
+        //     email: email,
+        //     skill_id: skill_id,
+        //     is_active: is_active
+        // })
+
+        // employeeCache.set(currEmployeeCache)
+
         res.status(200).json(employee_id);
     })
 })
