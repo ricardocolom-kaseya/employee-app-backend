@@ -13,6 +13,7 @@ app.use(cors())
 const NodeCache = require('node-cache')
 
 const employeeCache = new NodeCache()
+const skillsCache = new NodeCache()
 
 const { faker } = require("@faker-js/faker")
 
@@ -126,7 +127,7 @@ app.get('/employees', (req, res) => {
         let out = [];
 
         if (hasCharacters || hasSkill) {
-            
+
             employeeCache.keys().forEach(key => {
                 let currEmployee = employeeCache.get(key)
                 if (hasCharacters && hasSkill) {
@@ -150,14 +151,16 @@ app.get('/employees', (req, res) => {
             });
         }
         else {
-            employeeCache.keys().forEach(key => {                
+            employeeCache.keys().forEach(key => {
                 let currEmployee = employeeCache.get(key)
                 out.push(currEmployee)
             });
         }
 
+        out.sort((a, b) => (a.l_name.toLowerCase() > b.l_name.toLowerCase()) ? 1: -1)
+
         if (searchParams.order == "DESC")
-            out = out.reverse();
+            out.sort((a, b) => (a.l_name.toLowerCase() < b.l_name.toLowerCase()) ? 1 : -1)
 
         res.status(200).json(out)
     }
@@ -276,6 +279,7 @@ app.put('/employees/:employee_id', (req, res) => {
     })
 })
 
+// Delete an employee or all employees
 app.delete('/employees', (req, res) => {
 
     if (!authenticateToken(req.get('Authorization'))) {
@@ -285,8 +289,6 @@ app.delete('/employees', (req, res) => {
 
     let employee_id = req.body.employee_id
 
-    console.log(employee_id);
-
     if (!employee_id) {
         let sql = `DELETE FROM employees`
 
@@ -295,8 +297,7 @@ app.delete('/employees', (req, res) => {
                 throw err
             }
             employeeCache.del(employeeCache.keys())
-            res.status(200).json("All")
-            console.log("Should have removed all employees");
+            res.status(200).json("All employees removed")
         })
     }
     else {
@@ -314,6 +315,7 @@ app.delete('/employees', (req, res) => {
     }
 })
 
+// Get all skills
 app.get('/skills', (req, res) => {
 
     if (!authenticateToken(req.get('Authorization'))) {
@@ -321,16 +323,42 @@ app.get('/skills', (req, res) => {
         return;
     }
 
-    let sql = 'SELECT * FROM skills ORDER BY skill_name ASC'
+    if (skillsCache.keys().length > 0) {
+        let out = [];
 
-    db.query(sql, (err, result) => {
-        if (err) {
-            throw err
-        }
-        res.status(200).json(result)
-    })
+        skillsCache.keys().forEach(key => {
+            let currSkill = skillsCache.get(key)
+            out.push(currSkill)
+        })
+
+        out.sort((a, b) => (a.skill_name.toLowerCase() > b.skill_name.toLowerCase()) ? 1 : -1)
+
+        res.status(200).json(out)
+    }
+    else {
+        let sql = 'SELECT * FROM skills ORDER BY skill_name ASC'
+
+        db.query(sql, (err, result) => {
+            if (err) {
+                throw err
+            }
+
+            result.forEach(skill => {
+                skillsCache.set(skill.skill_id, skill)
+            });
+
+            let out = [];
+
+            skillsCache.keys().forEach(key => {
+                out.push(skillsCache.get(key))
+            })
+
+            res.status(200).json(out)
+        })
+    }
 })
 
+// Add a new skill
 app.post('/skills', (req, res) => {
 
     if (!authenticateToken(req.get('Authorization'))) {
@@ -351,10 +379,20 @@ app.post('/skills', (req, res) => {
         if (err) {
             throw err
         }
+
+        let newSkillBody = {
+            skill_id: skill_id,
+            skill_name: skill_name,
+            skill_desc: skill_desc,
+        }
+
+        skillsCache.set(skill_id, newSkillBody)
+
         res.status(200).json(skill_id);
     })
 })
 
+// Edit a skill
 app.put('/skills/:skill_id', (req, res) => {
 
     if (!authenticateToken(req.get('Authorization'))) {
@@ -375,10 +413,19 @@ app.put('/skills/:skill_id', (req, res) => {
         if (err) {
             throw err
         }
+
+        let newSkillBody = {
+            skill_id: skill_id,
+            skill_name: skill_name,
+            skill_desc: skill_desc,
+        }
+
+        skillsCache.set(skill_id, newSkillBody)
         res.status(200).json(skill_id);
     })
 })
 
+// Delete a skill or all skills
 app.delete('/skills', (req, res) => {
 
     if (!authenticateToken(req.get('Authorization'))) {
@@ -387,19 +434,17 @@ app.delete('/skills', (req, res) => {
     }
 
     let skill_id = req.body.skill_id
-    console.log(skill_id)
 
     if (!skill_id) {
         let sql = `DELETE FROM skills`
-        console.log(sql);
 
         db.query(sql, (err, result) => {
             if (err) {
                 throw err
             }
+            skillsCache.del(skillsCache.keys())
             res.status(200).json("All skills removed.")
         })
-        console.log("Should have removed all skills");
     }
     else {
         let sql = `DELETE FROM skills WHERE skill_id = '${skill_id}'`
@@ -409,6 +454,7 @@ app.delete('/skills', (req, res) => {
             if (err) {
                 throw err
             }
+            skillsCache.del(skill_id)
             res.status(200).json("Removed a skill");
         })
     }
