@@ -16,7 +16,7 @@ ACCESS_TOKEN_SECRET=your_jwt_access_token_secret
 
 (Note: Your jwt access token can be pretty much any string, a 36-character hex string is what I personally used)
 
-- Import the employeedb schema into MySQL, you can download the schema and its default tables [here](https://drive.google.com/file/d/1gsc1WNAYg3yHRKMwL5JCuLcYHeHFry51/view?usp=sharing).
+- Create the employeedb schema in MySQL, you can download the default tables [here](https://drive.google.com/file/d/1gsc1WNAYg3yHRKMwL5JCuLcYHeHFry51/view?usp=sharing).
 
 - Type <code>nodemon</code> in the terminal to start the server.
 
