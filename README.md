@@ -4,7 +4,7 @@ By default this runs on port 4000 of your local machine.
 
 ## Instructions
 
-- In the project directory run <code>npm install</code> to install all dependencies.
+- In the project directory run <code>yarn install</code> to install all dependencies.
 - Create a .env file in the project directory where:
 
 ```
