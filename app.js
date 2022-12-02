@@ -77,7 +77,7 @@ app.post('/authenticate', (req, res) => {
 
             let make_employees_table = "CREATE TABLE if not exists employees (employee_id varchar(36) NOT NULL, f_name text, l_name text, dob text, email text, skill_id text, is_active int DEFAULT NULL, PRIMARY KEY (employee_id));  "
 
-            let make_skills_table = "CREATE TABLE if not exists skill_levels (skill_id varchar(36) NOT NULL, skill_name text, skill_desc text, PRIMARY KEY (skill_id)); "
+            let make_skills_table = "CREATE TABLE if not exists skills (skill_id varchar(36) NOT NULL, skill_name text, skill_desc text, PRIMARY KEY (skill_id)); "
 
             let make_users_table = "CREATE TABLE if not exists users (id varchar(36) NOT NULL, username varchar(100) DEFAULT NULL, userpassword varchar(100) DEFAULT NULL, PRIMARY KEY (id))"
 
